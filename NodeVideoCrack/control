@@ -1,0 +1,9 @@
+Package: com.yourname.nodevideocrack
+Name: NodeVideoCrack
+Depends: mobilesubstrate
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Node Video Pro Crack
+Maintainer: Your Name
+Author: Your Name
+Section: Tweaks
