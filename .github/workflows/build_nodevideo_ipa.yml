@@ -1,0 +1,62 @@
+name: Build NodeVideo Injected IPA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'NodeVideoCrack/**'
+      - '.github/workflows/**'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Theos dependencies
+        run: |
+          brew install ldid xz
+          
+      - name: Setup Theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git ~/theos
+          echo "THEOS=~/theos" >> $GITHUB_ENV
+          
+      - name: Setup iOS SDK
+        run: |
+          curl -LO https://github.com/theos/sdks/archive/master.zip
+          unzip master.zip
+          mv sdks-master/*.sdk ~/theos/sdks/
+          rm -rf master.zip sdks-master
+          
+      - name: Build NodeVideoCrack Tweak
+        run: |
+          cd NodeVideoCrack
+          make package
+          cp .theos/obj/debug/NodeVideoCrack.dylib ../NodeVideoCrack.dylib
+          
+      - name: Setup Azule
+        run: |
+          git clone https://github.com/Al4ise/Azule ~/Azule
+          sudo ln -s ~/Azule/azule /usr/local/bin/azule
+          
+      - name: Pull LFS
+        run: |
+          git lfs pull
+          
+      - name: Create Dylib Folder
+        run: |
+          mkdir -p inject
+          cp NodeVideoCrack.dylib inject/
+          
+      - name: Inject Tweak into IPA
+        run: |
+          mkdir -p output_ipa
+          azule -i "Node Video++_8.6.1_13.0_LeTi.ipa" -o output_ipa/NodeVideo_VIP_Injected.ipa -f inject/NodeVideoCrack.dylib -u -m -n
+          
+      - name: Upload Injected IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NodeVideo-VIP-Injected-Unsigned-IPA
+          path: output_ipa/NodeVideo_VIP_Injected.ipa
